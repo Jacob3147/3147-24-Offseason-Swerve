@@ -209,6 +209,8 @@ public class SwerveSubsystem extends SubsystemBase
         });
     }
 
+    
+
     /**
      * One stick controls translation, heading is set to face a point
      * @param xTrans
@@ -236,6 +238,31 @@ public class SwerveSubsystem extends SubsystemBase
                     swerveDrive.getMaximumVelocity()
                 )
             );
+        });
+    }
+
+    /**
+     * One stick controls translation, one axis of the other controls rotation (or 3d flight stick)
+     * Code can help
+     * @param xTrans
+     * @param yTrans
+     * @param rotVel
+     * @param codeRotVel
+     * @return Command to run
+     */
+    public Command drive_rotation_with_assist(DoubleSupplier xTrans, DoubleSupplier yTrans, DoubleSupplier rotVel, DoubleSupplier codeRotVel)
+    {
+        return run(() -> {
+            swerveDrive.drive(
+                new Translation2d(
+                    Math.pow(xTrans.getAsDouble(), 3) * swerveDrive.getMaximumVelocity(),
+                    Math.pow(yTrans.getAsDouble(), 3) * swerveDrive.getMaximumVelocity()
+                ),
+                Math.pow(rotVel.getAsDouble() + codeRotVel.getAsDouble(), 3) * swerveDrive.getMaximumAngularVelocity(),
+                true,
+                false
+            );
+
         });
     }
 
