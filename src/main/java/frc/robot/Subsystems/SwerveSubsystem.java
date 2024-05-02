@@ -1,6 +1,6 @@
 package frc.robot.Subsystems;
 
-import static frc.robot.Utility.Constants.DriveConstants.*;
+import static frc.robot.util.Constants.DriveConstants.*;
 
 import java.io.File;
 import java.util.Optional;
@@ -25,7 +25,7 @@ import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-import frc.robot.Utility.Vision;
+import frc.robot.util.LimelightPose;
 import swervelib.SwerveDrive;
 import swervelib.parser.SwerveParser;
 
@@ -33,7 +33,7 @@ import swervelib.parser.SwerveParser;
 public class SwerveSubsystem extends SubsystemBase
 {
     private SwerveDrive swerveDrive;
-    Vision limelights;
+    LimelightPose limelights;
 
     Field2d field;
     Alliance m_alliance = null;
@@ -64,8 +64,6 @@ public class SwerveSubsystem extends SubsystemBase
         field = new Field2d();
         
         
-        limelights = new Vision(() -> swerveDrive.getRobotVelocity().omegaRadiansPerSecond,
-                                () -> swerveDrive.swerveDrivePoseEstimator);
     }
 
     /**
