@@ -26,6 +26,7 @@ import edu.wpi.first.wpilibj.smartdashboard.Field2d;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.util.LimelightPose;
+import frc.robot.util.PhotonPose;
 import swervelib.SwerveDrive;
 import swervelib.parser.SwerveParser;
 
@@ -267,6 +268,9 @@ public class SwerveSubsystem extends SubsystemBase
     @Override
     public void periodic() 
     {
+        LimelightPose.evaluate(getPoseEstimator.get(), speedsFieldRelative.get(), field);
+        //PhotonPose.evaluate(getPoseEstimator.get(), speedsFieldRelative.get(), field);
+
         field.setRobotPose(poseSupplier.get());
     }
 
