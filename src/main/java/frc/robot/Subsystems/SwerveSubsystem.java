@@ -64,23 +64,29 @@ public class SwerveSubsystem extends SubsystemBase
             throw new RuntimeException(e);
         }
 
-        //swerveDrive.setHeadingCorrection(false); // Heading correction should only be used while controlling the robot via angle.
-        //swerveDrive.setCosineCompensator(true);
+        swerveDrive.setCosineCompensator(true);
 
-        //swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
+        //0 is disabled. Try 0.1 and -0.1
+        swerveDrive.setAngularVelocityCompensation(true, true, 0);
 
-        swerveDrive.getModules()[0].setAntiJitter(false);
-        swerveDrive.getModules()[1].setAntiJitter(false);
-        swerveDrive.getModules()[2].setAntiJitter(false);
-        swerveDrive.getModules()[3].setAntiJitter(false);
+        swerveDrive.getModules()[0].setAntiJitter(true);
+        swerveDrive.getModules()[1].setAntiJitter(true);
+        swerveDrive.getModules()[2].setAntiJitter(true);
+        swerveDrive.getModules()[3].setAntiJitter(true);
 
         swerveDrive.pushOffsetsToEncoders();
+
+        swerveDrive.setChassisDiscretization(true, 0.02);
     
+        swerveDrive.setMotorIdleMode(true);
+
         field = new Field2d();
         
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 
         configurePathPlanner(DriverStation.getAlliance().get());
+
+        
     }
 
   
@@ -136,31 +142,22 @@ public class SwerveSubsystem extends SubsystemBase
      *  X-lock the wheels
      */
     public void lock() { swerveDrive.lockPose(); }
-    
-    public Command centerModulesCommand()
-    {
-        return run(() -> Arrays.asList(swerveDrive.getModules()).forEach(it -> it.setAngle(0.0)));
-    }
 
     //Getters and setters
     public Supplier<Pose2d> poseSupplier = () -> {return swerveDrive.getPose(); };
-    public Consumer<Pose2d> poseResetter = (p) -> {swerveDrive.resetOdometry(p); };
+    public Supplier<Rotation2d> headingSupplier = () -> {return poseSupplier.get().getRotation(); };
+
     public Supplier<ChassisSpeeds> speedsRobotRelative = () -> {return swerveDrive.getRobotVelocity(); };
-    public Consumer<ChassisSpeeds> driveRobotRelative = (speeds) -> {swerveDrive.drive(speeds); };
     public Supplier<ChassisSpeeds> speedsFieldRelative = () -> {return swerveDrive.getFieldVelocity(); };
-    public Supplier<Rotation2d> getHeading = () -> {return poseSupplier.get().getRotation(); };
-    public Supplier<SwerveDrivePoseEstimator> getPoseEstimator = () -> {return swerveDrive.swerveDrivePoseEstimator; };
+    
+    public Consumer<Pose2d> poseResetter = (p) -> {swerveDrive.resetOdometry(p); };
+    public Consumer<ChassisSpeeds> driveRobotRelative = (speeds) -> {swerveDrive.drive(speeds); };
+
 
     public Pose2d speaker()
     {
-        if(m_alliance == DriverStation.Alliance.Red)
-        {
-            return red_speaker;
-        }
-        else
-        {
-            return blue_speaker;
-        }
+        if(m_alliance == DriverStation.Alliance.Red) { return red_speaker; }
+        else { return blue_speaker; }
     }
 
       /**
@@ -180,7 +177,7 @@ public class SwerveSubsystem extends SubsystemBase
                                                             scaledInputs.getY(),
                                                             headingX,
                                                             headingY,
-                                                            getHeading.get().getRadians(),
+                                                            headingSupplier.get().getRadians(),
                                                             maximumSpeed);
     }
     
@@ -204,7 +201,7 @@ public class SwerveSubsystem extends SubsystemBase
                     Math.pow(xTrans.getAsDouble(), 3),
                     Math.pow(yTrans.getAsDouble(), 3),
                     Units.degreesToRadians(autoHeadingAngle.getAsDouble()),
-                    getHeading.get().getRadians(),
+                    headingSupplier.get().getRadians(),
                     swerveDrive.getMaximumVelocity()
                 )
             );
@@ -236,42 +233,18 @@ public class SwerveSubsystem extends SubsystemBase
                     Math.pow(xTrans.getAsDouble(), 3),
                     Math.pow(yTrans.getAsDouble(), 3),
                     angle,
-                    getHeading.get().getRadians(),
+                    headingSupplier.get().getRadians(),
                     swerveDrive.getMaximumVelocity()
                 )
             );
         });
     }
 
-    /**
-     * One stick controls translation, one axis of the other controls rotation (or 3d flight stick)
-     * Code can help
-     * @param xTrans
-     * @param yTrans
-     * @param rotVel
-     * @param codeRotVel
-     * @return Command to run
-     */
-    public Command drive_rotation_with_assist(DoubleSupplier xTrans, DoubleSupplier yTrans, DoubleSupplier rotVel, DoubleSupplier codeRotVel)
-    {
-        return run(() -> {
-            swerveDrive.drive(
-                new Translation2d(
-                    Math.pow(xTrans.getAsDouble(), 3) * swerveDrive.getMaximumVelocity(),
-                    Math.pow(yTrans.getAsDouble(), 3) * swerveDrive.getMaximumVelocity()
-                ),
-                Math.pow(rotVel.getAsDouble() + codeRotVel.getAsDouble(), 3) * swerveDrive.getMaximumAngularVelocity(),
-                true,
-                false
-            );
-
-        });
-    }
+    
 
     @Override
     public void periodic() 
     {
-        //swerveDrive.updateOdometry();
 
         //LimelightPose.evaluate(getPoseEstimator.get(), speedsFieldRelative.get(), field);
 
