@@ -65,11 +65,13 @@ public class SwerveSubsystem extends SubsystemBase
             throw new RuntimeException(e);
         }
 
-        
-
+        //adjusts for the fact that swerve setpoints aren't achieved instantly
         swerveDrive.setCosineCompensator(true);
 
-        //0 is disabled. Try 0.1 and -0.1
+        //adjusts for the fact that we only can generate setpoints every 20 ms
+        swerveDrive.setChassisDiscretization(true, 0.02);
+
+        //0.1 was experimentally pretty good. If driving straight and spinning goes off at an angle, this needs increased
         swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
 
         swerveDrive.getModules()[0].setAntiJitter(true);
@@ -79,7 +81,7 @@ public class SwerveSubsystem extends SubsystemBase
 
         swerveDrive.pushOffsetsToEncoders();
 
-        swerveDrive.setChassisDiscretization(true, 0.02);
+        
     
         swerveDrive.setMotorIdleMode(true);
 
@@ -88,17 +90,24 @@ public class SwerveSubsystem extends SubsystemBase
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 
         configurePathPlanner();
-
-        
+ 
     }
 
-    
-
-    
-
-    public void driveFieldOriented(ChassisSpeeds speeds)
+    public void driveAngle(Translation2d translationMetersPerSec, Rotation2d headingDegrees)
     {
+        ChassisSpeeds speeds = swerveDrive.swerveController.getTargetSpeeds(
+                                translationMetersPerSec.getX(),
+                                translationMetersPerSec.getY(),
+                                headingDegrees.getRadians(),
+                                headingSupplier.get().getRadians(),
+                                maximumSpeed);
+
         swerveDrive.driveFieldOriented(speeds);
+    }
+    
+    public void driveRate(Translation2d translationMetersPerSec, double rotationRadiansPerSec)
+    {
+        swerveDrive.drive(translationMetersPerSec, rotationRadiansPerSec, true, false);
     }
 
     /**
@@ -158,33 +167,15 @@ public class SwerveSubsystem extends SubsystemBase
     public Supplier<ChassisSpeeds> speedsFieldRelative = () -> {return swerveDrive.getFieldVelocity(); };
     
     public Consumer<Pose2d> poseResetter = (p) -> {swerveDrive.resetOdometry(p); };
-    public Consumer<ChassisSpeeds> driveRobotRelative = (speeds) -> 
-    { 
-        swerveDrive.drive(speeds); 
-    };
+    public Consumer<ChassisSpeeds> driveRobotRelative = (speeds) -> { swerveDrive.drive(speeds); };
+
+    public Consumer<Boolean> setHeadingCorrection = (enabled) -> { swerveDrive.setHeadingCorrection(enabled); };
 
 
     public Pose2d speaker()
     {
         if(m_alliance == DriverStation.Alliance.Red) { return red_speaker; }
         else { return blue_speaker; }
-    }
-
-    public void driveAngle(Translation2d translationMetersPerSec, Rotation2d headingDegrees)
-    {
-        ChassisSpeeds speeds = swerveDrive.swerveController.getTargetSpeeds(
-                                translationMetersPerSec.getX(),
-                                translationMetersPerSec.getY(),
-                                headingDegrees.getRadians(),
-                                headingSupplier.get().getRadians(),
-                                maximumSpeed);
-
-        swerveDrive.driveFieldOriented(speeds);
-    }
-    
-    public void driveRate(Translation2d translationMetersPerSec, double rotationRadiansPerSec)
-    {
-        swerveDrive.drive(translationMetersPerSec, rotationRadiansPerSec, true, false);
     }
 
     /**

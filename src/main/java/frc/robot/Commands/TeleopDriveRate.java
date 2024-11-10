@@ -5,20 +5,18 @@ import static frc.robot.util.Constants.DriveConstants.maximumSpeed;
 
 import java.util.function.DoubleSupplier;
 
-import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
-import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj2.command.Command;
 import frc.robot.Subsystems.SwerveSubsystem;
 import swervelib.math.SwerveMath;
 
-public class TeleopDriveRelative extends Command
+public class TeleopDriveRate extends Command
 {
     boolean init = false;
     DoubleSupplier vX, vY, vR;
     SwerveSubsystem swerve;
 
-    public TeleopDriveRelative(SwerveSubsystem swerve, DoubleSupplier vX, DoubleSupplier vY, DoubleSupplier vR)
+    public TeleopDriveRate(SwerveSubsystem swerve, DoubleSupplier vX, DoubleSupplier vY, DoubleSupplier vR)
     {
         this.swerve = swerve;
         this.vX = vX;

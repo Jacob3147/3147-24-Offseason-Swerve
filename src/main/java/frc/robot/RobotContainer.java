@@ -12,9 +12,7 @@ import com.pathplanner.lib.auto.AutoBuilder;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
-import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj.Filesystem;
-import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.SendableChooser;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -32,15 +30,16 @@ public class RobotContainer {
     DoubleSupplier right_x = () -> MathUtil.applyDeadband(m_driverController.getRightX(), 0.05);
     DoubleSupplier right_y = () -> MathUtil.applyDeadband(m_driverController.getRightY(), 0.05);
 
-    SwerveSubsystem m_swerveSubsystem = new SwerveSubsystem(new File(
-                                                                Filesystem.getDeployDirectory(),
-                                                                   "swerve"
-                                                                )
-                                                            );
+    SwerveSubsystem m_swerveSubsystem = 
+        new SwerveSubsystem(
+            new File(Filesystem.getDeployDirectory(), "swerve")
+        );
 
 
     Command TeleopDriveRelative = new TeleopDriveRate(m_swerveSubsystem, left_x, left_y, right_x);
     Command TeleopDriveAbsolute = new TeleopDriveAngle(m_swerveSubsystem, left_x, left_y, right_x, right_y);
+    Command faceSpeaker = m_swerveSubsystem.drive_semiAuto(left_x, left_y, m_swerveSubsystem.speaker());
+
     SendableChooser<Command> autoSelector;
 
     public RobotContainer() 
@@ -57,16 +56,12 @@ public class RobotContainer {
 
     private void configureBindings()
     {
+        m_driverController.y().whileTrue(faceSpeaker);
 
         m_driverController.a().whileTrue(Commands.runOnce(() -> m_swerveSubsystem.poseResetter.accept(new Pose2d(0, 0, new Rotation2d(0)))));
 
         m_driverController.x().whileTrue(Commands.runOnce(() -> m_swerveSubsystem.lock(), m_swerveSubsystem).repeatedly());
     }
-
-    /*public void allianceSet(Alliance m_alliance)
-    {
-        m_swerveSubsystem.configurePathPlanner(m_alliance);
-    }*/
 
     public Command getAutonomousCommand() 
     {

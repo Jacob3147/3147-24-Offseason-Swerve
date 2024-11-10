@@ -31,11 +31,12 @@ public class TeleopDriveAngle extends Command
         m_SwerveSubsystem.setHeadingCorrection.accept(true);
     }
 
+    
     public void execute()
     {
-       
         Translation2d scaledInputs = SwerveMath.cubeTranslation(new Translation2d(vx.getAsDouble(),
                                                                                   vy.getAsDouble()));
+                                                                                  
         double rotationX = -rx.getAsDouble();
         double rotationY = -ry.getAsDouble();
         if(Math.abs(rotationX) > 0.5 && Math.abs(rotationY) > 0.5)
