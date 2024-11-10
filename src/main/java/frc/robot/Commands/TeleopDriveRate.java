@@ -40,9 +40,9 @@ public class TeleopDriveRelative extends Command
         Translation2d translationInputs = new Translation2d(-vY.getAsDouble(), -vX.getAsDouble());
         Translation2d scaledTranslation = SwerveMath.scaleTranslation(translationInputs, maximumSpeed);
         
-        double scaledRotation = Math.pow(vR.getAsDouble(), 3) * maxAngular;
+        double scaledRotation = -Math.pow(vR.getAsDouble(), 3) * maxAngular;
 
-        swerve.drive(scaledTranslation, scaledRotation);
+        swerve.driveRate(scaledTranslation, scaledRotation);
     }
 
     @Override

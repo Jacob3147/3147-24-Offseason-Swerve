@@ -24,6 +24,7 @@ import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.smartdashboard.Field2d;
+import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SequentialCommandGroup;
@@ -64,10 +65,12 @@ public class SwerveSubsystem extends SubsystemBase
             throw new RuntimeException(e);
         }
 
+        
+
         swerveDrive.setCosineCompensator(true);
 
         //0 is disabled. Try 0.1 and -0.1
-        swerveDrive.setAngularVelocityCompensation(true, true, 0);
+        swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
 
         swerveDrive.getModules()[0].setAntiJitter(true);
         swerveDrive.getModules()[1].setAntiJitter(true);
@@ -84,22 +87,25 @@ public class SwerveSubsystem extends SubsystemBase
         
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 
-        configurePathPlanner(DriverStation.getAlliance().get());
+        configurePathPlanner();
 
         
     }
 
-  
+    
 
+    
 
+    public void driveFieldOriented(ChassisSpeeds speeds)
+    {
+        swerveDrive.driveFieldOriented(speeds);
+    }
 
     /**
     * Configure Path Planner following config
-    * Called by robotcontainer when driver station is connected (so we know our alliance)
     */
-    public void configurePathPlanner(Alliance alliance)
+    public void configurePathPlanner()
     {
-        m_alliance = alliance;
         AutoBuilder.configureHolonomic(
             poseSupplier,
             poseResetter,
@@ -108,11 +114,12 @@ public class SwerveSubsystem extends SubsystemBase
             new HolonomicPathFollowerConfig(
                 new PIDConstants(5, 0, 0), //translation
                 new PIDConstants(5, 0, 0), //rotation
-                maximumSpeed,
-                17.68,
+                swerveDrive.getMaximumVelocity(),
+                swerveDrive.swerveDriveConfiguration.getDriveBaseRadiusMeters(),
                 new ReplanningConfig()
             ),
-            () -> { return alliance == DriverStation.Alliance.Red; },
+            () -> { var alliance = DriverStation.getAlliance();
+                    return alliance.isPresent() ? alliance.get() == DriverStation.Alliance.Red : false; },
             this
         );
     }
@@ -151,7 +158,10 @@ public class SwerveSubsystem extends SubsystemBase
     public Supplier<ChassisSpeeds> speedsFieldRelative = () -> {return swerveDrive.getFieldVelocity(); };
     
     public Consumer<Pose2d> poseResetter = (p) -> {swerveDrive.resetOdometry(p); };
-    public Consumer<ChassisSpeeds> driveRobotRelative = (speeds) -> {swerveDrive.drive(speeds); };
+    public Consumer<ChassisSpeeds> driveRobotRelative = (speeds) -> 
+    { 
+        swerveDrive.drive(speeds); 
+    };
 
 
     public Pose2d speaker()
@@ -160,30 +170,21 @@ public class SwerveSubsystem extends SubsystemBase
         else { return blue_speaker; }
     }
 
-      /**
-     * Get the chassis speeds based on controller input of 2 joysticks. One for speeds in which direction. The other for
-     * the angle of the robot.
-     *
-     * @param xInput   X joystick input for the robot to move in the X direction.
-     * @param yInput   Y joystick input for the robot to move in the Y direction.
-     * @param headingX X joystick which controls the angle of the robot.
-     * @param headingY Y joystick which controls the angle of the robot.
-     * @return {@link ChassisSpeeds} which can be sent to the Swerve Drive.
-     */
-    public ChassisSpeeds getTargetSpeeds(double xInput, double yInput, double headingX, double headingY)
+    public void driveAngle(Translation2d translationMetersPerSec, Rotation2d headingDegrees)
     {
-        Translation2d scaledInputs = SwerveMath.cubeTranslation(new Translation2d(xInput, yInput));
-        return swerveDrive.swerveController.getTargetSpeeds(scaledInputs.getX(),
-                                                            scaledInputs.getY(),
-                                                            headingX,
-                                                            headingY,
-                                                            headingSupplier.get().getRadians(),
-                                                            maximumSpeed);
+        ChassisSpeeds speeds = swerveDrive.swerveController.getTargetSpeeds(
+                                translationMetersPerSec.getX(),
+                                translationMetersPerSec.getY(),
+                                headingDegrees.getRadians(),
+                                headingSupplier.get().getRadians(),
+                                maximumSpeed);
+
+        swerveDrive.driveFieldOriented(speeds);
     }
     
-    public void drive(Translation2d translation, double rotation)
+    public void driveRate(Translation2d translationMetersPerSec, double rotationRadiansPerSec)
     {
-        swerveDrive.drive(translation, rotation, true, false);
+        swerveDrive.drive(translationMetersPerSec, rotationRadiansPerSec, true, false);
     }
 
     /**

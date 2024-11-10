@@ -20,8 +20,8 @@ import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
-import frc.robot.Commands.TeleopDriveRelative;
-import frc.robot.Commands.TeleopDriveAbsolute;
+import frc.robot.Commands.TeleopDriveAngle;
+import frc.robot.Commands.TeleopDriveRate;
 import frc.robot.Subsystems.SwerveSubsystem;
 
 public class RobotContainer {
@@ -39,9 +39,8 @@ public class RobotContainer {
                                                             );
 
 
-    Command TeleopDriveRelative = new TeleopDriveRelative(m_swerveSubsystem, left_x, left_y, right_x);
-    Command TeleopDriveAbsolute = new TeleopDriveAbsolute(m_swerveSubsystem, left_x, left_y, right_x, right_y);
-
+    Command TeleopDriveRelative = new TeleopDriveRate(m_swerveSubsystem, left_x, left_y, right_x);
+    Command TeleopDriveAbsolute = new TeleopDriveAngle(m_swerveSubsystem, left_x, left_y, right_x, right_y);
     SendableChooser<Command> autoSelector;
 
     public RobotContainer() 
@@ -64,10 +63,10 @@ public class RobotContainer {
         m_driverController.x().whileTrue(Commands.runOnce(() -> m_swerveSubsystem.lock(), m_swerveSubsystem).repeatedly());
     }
 
-    public void allianceSet(Alliance m_alliance)
+    /*public void allianceSet(Alliance m_alliance)
     {
         m_swerveSubsystem.configurePathPlanner(m_alliance);
-    }
+    }*/
 
     public Command getAutonomousCommand() 
     {

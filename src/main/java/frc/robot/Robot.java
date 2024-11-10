@@ -14,11 +14,7 @@ public class Robot extends TimedRobot {
     private Command m_autonomousCommand;
     private RobotContainer m_robotContainer;
 
-    @Override
-    public void driverStationConnected() 
-    {
-        m_robotContainer.allianceSet(DriverStation.getAlliance().get());
-    }
+
 
     @Override
     public void robotInit() 
