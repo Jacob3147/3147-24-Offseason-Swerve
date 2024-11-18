@@ -34,20 +34,11 @@ public class TeleopDriveAngle extends Command
     
     public void execute()
     {
-        Translation2d scaledInputs = SwerveMath.cubeTranslation(new Translation2d(vx.getAsDouble(),
-                                                                                  vy.getAsDouble()));
+        Translation2d scaledInputs = SwerveMath.cubeTranslation(new Translation2d(-vy.getAsDouble(),
+                                                                                  -vx.getAsDouble()));
                                                                                   
-        double rotationX = -rx.getAsDouble();
-        double rotationY = -ry.getAsDouble();
-        if(Math.abs(rotationX) > 0.5 && Math.abs(rotationY) > 0.5)
-        {
-            Rotation2d rotation = new Rotation2d(rx.getAsDouble(), ry.getAsDouble());
-            m_SwerveSubsystem.driveAngle(scaledInputs, rotation); 
-        }
-        else
-        {
-            m_SwerveSubsystem.driveRate(scaledInputs, 0);
-        }
+        Rotation2d rotation = new Rotation2d(-ry.getAsDouble(), -rx.getAsDouble());
+        m_SwerveSubsystem.driveAngle(scaledInputs, rotation); 
     
     }
 

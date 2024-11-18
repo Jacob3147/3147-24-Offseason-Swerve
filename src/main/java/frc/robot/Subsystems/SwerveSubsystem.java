@@ -65,13 +65,11 @@ public class SwerveSubsystem extends SubsystemBase
             throw new RuntimeException(e);
         }
 
-        //adjusts for the fact that swerve setpoints aren't achieved instantly
+        
+
         swerveDrive.setCosineCompensator(true);
 
-        //adjusts for the fact that we only can generate setpoints every 20 ms
-        swerveDrive.setChassisDiscretization(true, 0.02);
-
-        //0.1 was experimentally pretty good. If driving straight and spinning goes off at an angle, this needs increased
+        //0 is disabled. Try 0.1 and -0.1
         swerveDrive.setAngularVelocityCompensation(true, true, 0.1);
 
         swerveDrive.getModules()[0].setAntiJitter(true);
@@ -81,7 +79,7 @@ public class SwerveSubsystem extends SubsystemBase
 
         swerveDrive.pushOffsetsToEncoders();
 
-        
+        swerveDrive.setChassisDiscretization(true, 0.02);
     
         swerveDrive.setMotorIdleMode(true);
 
@@ -90,24 +88,17 @@ public class SwerveSubsystem extends SubsystemBase
         SwerveDriveTelemetry.verbosity = TelemetryVerbosity.HIGH;
 
         configurePathPlanner();
- 
+
+        
     }
 
-    public void driveAngle(Translation2d translationMetersPerSec, Rotation2d headingDegrees)
-    {
-        ChassisSpeeds speeds = swerveDrive.swerveController.getTargetSpeeds(
-                                translationMetersPerSec.getX(),
-                                translationMetersPerSec.getY(),
-                                headingDegrees.getRadians(),
-                                headingSupplier.get().getRadians(),
-                                maximumSpeed);
-
-        swerveDrive.driveFieldOriented(speeds);
-    }
     
-    public void driveRate(Translation2d translationMetersPerSec, double rotationRadiansPerSec)
+
+    
+
+    public void driveFieldOriented(ChassisSpeeds speeds)
     {
-        swerveDrive.drive(translationMetersPerSec, rotationRadiansPerSec, true, false);
+        swerveDrive.driveFieldOriented(speeds);
     }
 
     /**
@@ -169,13 +160,30 @@ public class SwerveSubsystem extends SubsystemBase
     public Consumer<Pose2d> poseResetter = (p) -> {swerveDrive.resetOdometry(p); };
     public Consumer<ChassisSpeeds> driveRobotRelative = (speeds) -> { swerveDrive.drive(speeds); };
 
-    public Consumer<Boolean> setHeadingCorrection = (enabled) -> { swerveDrive.setHeadingCorrection(enabled); };
+    public Consumer<Boolean> setHeadingCorrection = (value) -> { swerveDrive.setHeadingCorrection(value); };
 
 
     public Pose2d speaker()
     {
         if(m_alliance == DriverStation.Alliance.Red) { return red_speaker; }
         else { return blue_speaker; }
+    }
+
+    public void driveAngle(Translation2d translationMetersPerSec, Rotation2d headingDegrees)
+    {
+        ChassisSpeeds speeds = swerveDrive.swerveController.getTargetSpeeds(
+                                translationMetersPerSec.getX(),
+                                translationMetersPerSec.getY(),
+                                headingDegrees.getRadians(),
+                                headingSupplier.get().getRadians(),
+                                maximumSpeed);
+
+        swerveDrive.driveFieldOriented(speeds);
+    }
+    
+    public void driveRate(Translation2d translationMetersPerSec, double rotationRadiansPerSec)
+    {
+        swerveDrive.drive(translationMetersPerSec, rotationRadiansPerSec, true, false);
     }
 
     /**
@@ -209,21 +217,21 @@ public class SwerveSubsystem extends SubsystemBase
      * @param pointTowards {@link Pose2d} to face towards
      * @return
      */
-    public Command drive_semiAuto(DoubleSupplier xTrans, DoubleSupplier yTrans, Pose2d pointTowards)
+    public Command drive_semiAuto(DoubleSupplier yTrans, DoubleSupplier xTrans, Pose2d pointTowards)
     {
         return run(() -> {
             Translation2d target = pointTowards.getTranslation();
             Translation2d bot = swerveDrive.getPose().getTranslation();
             double angle = 0;
             try {
-                angle = bot.minus(target).getAngle().getRadians();
+                angle = bot.minus(target).unaryMinus().getAngle().getRadians();
             } catch (Exception e) {
                 
             }
             swerveDrive.driveFieldOriented(
                 swerveDrive.swerveController.getTargetSpeeds(
-                    Math.pow(xTrans.getAsDouble(), 3),
-                    Math.pow(yTrans.getAsDouble(), 3),
+                    -Math.pow(xTrans.getAsDouble(), 3),
+                    -Math.pow(yTrans.getAsDouble(), 3),
                     angle,
                     headingSupplier.get().getRadians(),
                     swerveDrive.getMaximumVelocity()

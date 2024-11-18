@@ -36,8 +36,8 @@ public class RobotContainer {
         );
 
 
-    Command TeleopDriveRelative = new TeleopDriveRate(m_swerveSubsystem, left_x, left_y, right_x);
-    Command TeleopDriveAbsolute = new TeleopDriveAngle(m_swerveSubsystem, left_x, left_y, right_x, right_y);
+    Command TeleopDriveRate = new TeleopDriveRate(m_swerveSubsystem, left_x, left_y, right_x);
+    Command TeleopDriveAngle = new TeleopDriveAngle(m_swerveSubsystem, left_x, left_y, right_x, right_y);
     Command faceSpeaker = m_swerveSubsystem.drive_semiAuto(left_x, left_y, m_swerveSubsystem.speaker());
 
     SendableChooser<Command> autoSelector;
@@ -45,8 +45,7 @@ public class RobotContainer {
     public RobotContainer() 
     {
 
-        m_swerveSubsystem.setDefaultCommand(TeleopDriveRelative);
-
+        m_swerveSubsystem.setDefaultCommand(TeleopDriveAngle);
 
         autoSelector = AutoBuilder.buildAutoChooser();
         SmartDashboard.putData("Auto Chooser", autoSelector);
@@ -56,7 +55,8 @@ public class RobotContainer {
 
     private void configureBindings()
     {
-        m_driverController.y().whileTrue(faceSpeaker);
+       // m_driverController.y().toggleOnTrue(TeleopDriveRate);
+        m_driverController.b().whileTrue(faceSpeaker);
 
         m_driverController.a().whileTrue(Commands.runOnce(() -> m_swerveSubsystem.poseResetter.accept(new Pose2d(0, 0, new Rotation2d(0)))));
 
