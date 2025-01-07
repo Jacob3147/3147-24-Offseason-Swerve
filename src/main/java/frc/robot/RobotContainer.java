@@ -55,7 +55,8 @@ public class RobotContainer {
 
     private void configureBindings()
     {
-       // m_driverController.y().toggleOnTrue(TeleopDriveRate);
+        m_driverController.y().toggleOnTrue(TeleopDriveRate);
+
         m_driverController.b().whileTrue(faceSpeaker);
 
         m_driverController.a().whileTrue(Commands.runOnce(() -> m_swerveSubsystem.poseResetter.accept(new Pose2d(0, 0, new Rotation2d(0)))));

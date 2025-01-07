@@ -2,6 +2,7 @@ package frc.robot.Commands;
 
 import java.util.function.DoubleSupplier;
 
+import edu.wpi.first.math.filter.SlewRateLimiter;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Translation2d;
 import edu.wpi.first.wpilibj2.command.Command;
@@ -12,6 +13,10 @@ public class TeleopDriveAngle extends Command
 {
     SwerveSubsystem m_SwerveSubsystem;
     DoubleSupplier vx, vy, rx, ry;
+    Translation2d scaledInputs;
+    Rotation2d rotation;
+    double vxAct, vyAct, rxAct, ryAct;
+    SlewRateLimiter xSlew, ySlew;
 
     public TeleopDriveAngle(SwerveSubsystem m_SwerveSubsystem, DoubleSupplier vX, DoubleSupplier vY, DoubleSupplier rX, DoubleSupplier rY )
     {
@@ -23,6 +28,9 @@ public class TeleopDriveAngle extends Command
         this.vy = vY;
         this.rx = rX;
         this.ry = rY;
+
+        xSlew = new SlewRateLimiter(2);
+        ySlew = new SlewRateLimiter(2);
     }
 
     @Override
@@ -34,10 +42,22 @@ public class TeleopDriveAngle extends Command
     
     public void execute()
     {
-        Translation2d scaledInputs = SwerveMath.cubeTranslation(new Translation2d(-vy.getAsDouble(),
-                                                                                  -vx.getAsDouble()));
-                                                                                  
-        Rotation2d rotation = new Rotation2d(-ry.getAsDouble(), -rx.getAsDouble());
+        vxAct = vx.getAsDouble();
+        vyAct = vy.getAsDouble();
+        rxAct = rx.getAsDouble();
+        ryAct = ry.getAsDouble();
+
+        scaledInputs = SwerveMath.cubeTranslation(new Translation2d(-vyAct, -vxAct));
+        
+                                                                     
+        if(Math.abs(ryAct) < 0.5 && Math.abs(rxAct) < 0.5)
+        {
+            rotation = new Rotation2d(0);
+        }
+        else
+        {
+            rotation = new Rotation2d(-ryAct, -rxAct);
+        }
         m_SwerveSubsystem.driveAngle(scaledInputs, rotation); 
     
     }

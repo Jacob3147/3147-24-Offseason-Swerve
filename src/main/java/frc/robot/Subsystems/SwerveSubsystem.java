@@ -89,6 +89,7 @@ public class SwerveSubsystem extends SubsystemBase
 
         configurePathPlanner();
 
+        swerveDrive.stopOdometryThread(); //I run this in periodic instead
         
     }
 
@@ -245,7 +246,8 @@ public class SwerveSubsystem extends SubsystemBase
     @Override
     public void periodic() 
     {
-
+        
+        swerveDrive.updateOdometry();
         //LimelightPose.evaluate(getPoseEstimator.get(), speedsFieldRelative.get(), field);
 
         field.setRobotPose(poseSupplier.get());
